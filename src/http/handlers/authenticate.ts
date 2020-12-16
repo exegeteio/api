@@ -1,5 +1,5 @@
 import Axios from "axios";
-import { json, Request, Response } from "express";
+import { Request, Response } from "express";
 import { DateTime } from "luxon";
 import { ApiClient, StaticAuthProvider } from "twitch";
 import User from "../../data/User";

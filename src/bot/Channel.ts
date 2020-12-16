@@ -1,4 +1,4 @@
-import { ApiClient, HelixBan, HelixUser, StaticAuthProvider } from "twitch";
+import { ApiClient, HelixUser, StaticAuthProvider } from "twitch";
 import { IUser } from "../data/User";
 import { EventEmitter } from "events";
 import { Client } from "tmi.js";
@@ -94,7 +94,7 @@ export class Channel extends EventEmitter {
     // Add a ban for the user if we haven't already banned them
     if (!this.banList.find((existing_ban) => existing_ban.id === user.id)) {
       try {
-        this.chat.ban(this.user.twitch_name, user.displayName, reason);
+        await this.chat.ban(this.user.twitch_name, user.displayName, reason);
       } catch (e) {
         console.log(`ADDING BAN FAILED!!!! 😭 ${user.displayName}`);
       }
