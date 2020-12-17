@@ -18,7 +18,7 @@ app.get("/auth_link", auth_link);
 app.post("/authenticate", authenticate);
 app.get("/ban_list", ban_list);
 
-app.listen(process.env.PORT || 3000, () => {
+app.listen(process.env.PORT || 5000, () => {
   console.log("🎅 Listening");
 });
 
