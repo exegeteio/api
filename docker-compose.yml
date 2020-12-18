@@ -5,7 +5,7 @@ services:
     build: .
     image: cbb
     ports:
-      - 3000:3000
+      - 5000:5000
     volumes:
       - .:/src
     command: yarn dev
@@ -16,7 +16,7 @@ services:
     image: mongo
     restart: always
     ports:
-      - 27017:27017
+      - 27018:27018
     environment:
       MONGO_INITDB_ROOT_USERNAME: claw_ban_bot
       MONGO_INITDB_ROOT_PASSWORD: supersecretpassword
