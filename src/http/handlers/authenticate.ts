@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { DateTime } from "luxon";
 import { ApiClient, StaticAuthProvider } from "twitch";
 import { IConfig } from "../../config";
+import * as jwt from "jsonwebtoken";
 import User from "../../data/User";
 
 export default async (req: Request, res: Response) => {
@@ -55,7 +56,18 @@ export default async (req: Request, res: Response) => {
     ).exec();
     const user = await User.findOne({ twitch_id: me.id }).exec();
     req.app.get("bot").addUser(user);
-    res.json({ twitchId: me.id, twitchDisplayName: me.displayName });
+    res.json(
+      jwt.sign(
+        {
+          twitchDisplayName: me.displayName,
+          role: config.admins.includes(me.displayName.toLowerCase())
+            ? "admin"
+            : "user",
+        },
+        process.env.JWT_KEY,
+        { subject: me.id }
+      )
+    );
   } catch (e) {
     console.log(e);
     res.sendStatus(500);
