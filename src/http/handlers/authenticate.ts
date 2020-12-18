@@ -2,6 +2,7 @@ import Axios from "axios";
 import { Request, Response } from "express";
 import { DateTime } from "luxon";
 import { ApiClient, StaticAuthProvider } from "twitch";
+import { IConfig } from "../../config";
 import User from "../../data/User";
 
 export default async (req: Request, res: Response) => {
@@ -27,6 +28,15 @@ export default async (req: Request, res: Response) => {
     );
     const api = new ApiClient({ authProvider });
     const me = await api.helix.users.getMe();
+
+    // Check if the user is in the allow list
+    const config: IConfig = req.app.get("config");
+    if (
+      config.enable_allow_list &&
+      !config.allow_list.includes(me.displayName.toLowerCase())
+    ) {
+      return res.sendStatus(403);
+    }
 
     await User.updateOne(
       { twitch_id: me.id },
