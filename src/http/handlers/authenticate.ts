@@ -5,10 +5,6 @@ import { ApiClient, StaticAuthProvider } from "twitch";
 import User from "../../data/User";
 
 export default async (req: Request, res: Response) => {
-  let template_data = {
-    displayName: "Universe",
-    TWITCH_CLIENT_ID: process.env.TWITCH_CLIENT_ID,
-  };
   try {
     const response = await Axios.post(
       "https://id.twitch.tv/oauth2/token",
@@ -48,8 +44,7 @@ export default async (req: Request, res: Response) => {
       { upsert: true }
     ).exec();
     const user = await User.findOne({ twitch_id: me.id }).exec();
-    template_data.displayName = me.displayName;
-    await req.app.get("bot").addUser(user);
+    req.app.get("bot").addUser(user);
     res.json({ twitchId: me.id, twitchDisplayName: me.displayName });
   } catch (e) {
     console.log(e);

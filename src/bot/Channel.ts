@@ -52,7 +52,9 @@ export class Channel extends EventEmitter {
   }
 
   async close() {
-    await this.chat.disconnect();
+    if (this.chat.readyState() === "OPEN") {
+      await this.chat.disconnect();
+    }
   }
 
   async connect() {
