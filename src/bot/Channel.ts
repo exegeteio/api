@@ -1,7 +1,11 @@
 import { ApiClient, HelixUser, StaticAuthProvider } from "twitch";
 import { IUser } from "../data/User";
 import { EventEmitter } from "events";
-import { Client } from "tmi.js";
+import { ChatUserstate, Client } from "tmi.js";
+import config from "../config";
+
+import { ContentModeratorClient } from "@azure/cognitiveservices-contentmoderator";
+import { CognitiveServicesCredentials } from "@azure/ms-rest-azure-js";
 
 export class Channel extends EventEmitter {
   private user: IUser;
@@ -9,6 +13,7 @@ export class Channel extends EventEmitter {
   private api: ApiClient;
   private chat: Client;
   private banList: HelixUser[] = [];
+  private cognitive_client: ContentModeratorClient;
 
   constructor(user: IUser) {
     super();
@@ -18,6 +23,17 @@ export class Channel extends EventEmitter {
       user.access_token
     );
     this.api = new ApiClient({ authProvider: this.authProvider });
+
+    const contentModeratorKey = process.env.CONTENT_MODERATOR_KEY;
+    const contentModeratorEndPoint = process.env.CONTENT_MODERATOR_ENDPOINT;
+
+    const cognitiveServiceCredentials = new CognitiveServicesCredentials(
+      contentModeratorKey
+    );
+    this.cognitive_client = new ContentModeratorClient(
+      cognitiveServiceCredentials,
+      contentModeratorEndPoint
+    );
   }
 
   public async loadBanList() {
@@ -76,7 +92,32 @@ export class Channel extends EventEmitter {
           this.channelBan(username, reason);
         }
       );
-      this.chat.on("message", console.log);
+      this.chat.on(
+        "message",
+        async (
+          channel: string,
+          userstate: ChatUserstate,
+          message: string,
+          self: boolean
+        ) => {
+          if (
+            self || // Streamer messages should be ignored. They can say what they want in their own stream
+            (config.enable_allow_list &&
+              config.allow_list.includes(
+                userstate["display-name"].toLowerCase()
+              )) // Don't ban people in the allow list
+          )
+            // Run the tool, get the score!
+            return;
+
+          const result = await this.cognitive_client.textModeration.screenText(
+            "text/plain",
+            message,
+            { classify: true }
+          );
+          console.log(message, result);
+        }
+      );
       await this.chat.connect();
     } catch (e) {
       console.log("ERR", e);
